@@ -33,6 +33,7 @@ namespace LightFiller
             this.NewPolygonBtn = new System.Windows.Forms.Button();
             this.memoryPanel = new System.Windows.Forms.Panel();
             this.polyActions = new System.Windows.Forms.GroupBox();
+            this.fillPolygonBtn = new System.Windows.Forms.Button();
             this.movePolygonBtn = new System.Windows.Forms.Button();
             this.moveVerticeBtn = new System.Windows.Forms.Button();
             this.deleteVerticeBtn = new System.Windows.Forms.Button();
@@ -48,9 +49,10 @@ namespace LightFiller
             // pictureBox
             // 
             this.pictureBox.BackColor = System.Drawing.Color.White;
-            this.pictureBox.Location = new System.Drawing.Point(24, 81);
+            this.pictureBox.Location = new System.Drawing.Point(21, 61);
+            this.pictureBox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.pictureBox.Name = "pictureBox";
-            this.pictureBox.Size = new System.Drawing.Size(1200, 862);
+            this.pictureBox.Size = new System.Drawing.Size(1050, 646);
             this.pictureBox.TabIndex = 2;
             this.pictureBox.TabStop = false;
             // 
@@ -61,9 +63,10 @@ namespace LightFiller
             this.NewPolygonBtn.FlatAppearance.BorderSize = 5;
             this.NewPolygonBtn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.NewPolygonBtn.ForeColor = System.Drawing.SystemColors.Control;
-            this.NewPolygonBtn.Location = new System.Drawing.Point(24, 12);
+            this.NewPolygonBtn.Location = new System.Drawing.Point(21, 9);
+            this.NewPolygonBtn.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.NewPolygonBtn.Name = "NewPolygonBtn";
-            this.NewPolygonBtn.Size = new System.Drawing.Size(147, 53);
+            this.NewPolygonBtn.Size = new System.Drawing.Size(129, 40);
             this.NewPolygonBtn.TabIndex = 4;
             this.NewPolygonBtn.Text = "New polygon";
             this.NewPolygonBtn.UseVisualStyleBackColor = false;
@@ -74,24 +77,43 @@ namespace LightFiller
             this.memoryPanel.Controls.Add(this.polyActions);
             this.memoryPanel.Controls.Add(this.PolygonLbl);
             this.memoryPanel.Controls.Add(this.polygonListBox);
-            this.memoryPanel.Location = new System.Drawing.Point(1259, 59);
+            this.memoryPanel.Location = new System.Drawing.Point(1102, 44);
+            this.memoryPanel.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.memoryPanel.Name = "memoryPanel";
-            this.memoryPanel.Size = new System.Drawing.Size(345, 987);
+            this.memoryPanel.Size = new System.Drawing.Size(302, 740);
             this.memoryPanel.TabIndex = 5;
             // 
             // polyActions
             // 
+            this.polyActions.Controls.Add(this.fillPolygonBtn);
             this.polyActions.Controls.Add(this.movePolygonBtn);
             this.polyActions.Controls.Add(this.moveVerticeBtn);
             this.polyActions.Controls.Add(this.deleteVerticeBtn);
             this.polyActions.Controls.Add(this.addVerticeBtn);
-            this.polyActions.Location = new System.Drawing.Point(70, 83);
+            this.polyActions.Location = new System.Drawing.Point(61, 62);
+            this.polyActions.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.polyActions.Name = "polyActions";
-            this.polyActions.Size = new System.Drawing.Size(229, 417);
+            this.polyActions.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.polyActions.Size = new System.Drawing.Size(200, 328);
             this.polyActions.TabIndex = 0;
             this.polyActions.TabStop = false;
             this.polyActions.Text = "Polygon Actions";
             this.polyActions.Visible = false;
+            // 
+            // fillPolygonBtn
+            // 
+            this.fillPolygonBtn.BackColor = System.Drawing.Color.Black;
+            this.fillPolygonBtn.FlatAppearance.BorderColor = System.Drawing.Color.Black;
+            this.fillPolygonBtn.FlatAppearance.BorderSize = 5;
+            this.fillPolygonBtn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.fillPolygonBtn.ForeColor = System.Drawing.SystemColors.Control;
+            this.fillPolygonBtn.Location = new System.Drawing.Point(30, 262);
+            this.fillPolygonBtn.Name = "fillPolygonBtn";
+            this.fillPolygonBtn.Size = new System.Drawing.Size(133, 40);
+            this.fillPolygonBtn.TabIndex = 5;
+            this.fillPolygonBtn.Text = "FIll polygon";
+            this.fillPolygonBtn.UseVisualStyleBackColor = false;
+            this.fillPolygonBtn.Click += new System.EventHandler(this.fillPolygonBtn_Click);
             // 
             // movePolygonBtn
             // 
@@ -100,10 +122,9 @@ namespace LightFiller
             this.movePolygonBtn.FlatAppearance.BorderSize = 5;
             this.movePolygonBtn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.movePolygonBtn.ForeColor = System.Drawing.SystemColors.Control;
-            this.movePolygonBtn.Location = new System.Drawing.Point(34, 345);
-            this.movePolygonBtn.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.movePolygonBtn.Location = new System.Drawing.Point(30, 207);
             this.movePolygonBtn.Name = "movePolygonBtn";
-            this.movePolygonBtn.Size = new System.Drawing.Size(152, 53);
+            this.movePolygonBtn.Size = new System.Drawing.Size(133, 40);
             this.movePolygonBtn.TabIndex = 4;
             this.movePolygonBtn.Text = "Move polygon";
             this.movePolygonBtn.UseVisualStyleBackColor = false;
@@ -116,10 +137,9 @@ namespace LightFiller
             this.moveVerticeBtn.FlatAppearance.BorderSize = 5;
             this.moveVerticeBtn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.moveVerticeBtn.ForeColor = System.Drawing.SystemColors.Control;
-            this.moveVerticeBtn.Location = new System.Drawing.Point(34, 51);
-            this.moveVerticeBtn.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.moveVerticeBtn.Location = new System.Drawing.Point(30, 38);
             this.moveVerticeBtn.Name = "moveVerticeBtn";
-            this.moveVerticeBtn.Size = new System.Drawing.Size(152, 53);
+            this.moveVerticeBtn.Size = new System.Drawing.Size(133, 40);
             this.moveVerticeBtn.TabIndex = 0;
             this.moveVerticeBtn.Text = "Move vertice";
             this.moveVerticeBtn.UseVisualStyleBackColor = false;
@@ -132,10 +152,9 @@ namespace LightFiller
             this.deleteVerticeBtn.FlatAppearance.BorderSize = 5;
             this.deleteVerticeBtn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.deleteVerticeBtn.ForeColor = System.Drawing.SystemColors.Control;
-            this.deleteVerticeBtn.Location = new System.Drawing.Point(34, 126);
-            this.deleteVerticeBtn.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.deleteVerticeBtn.Location = new System.Drawing.Point(30, 94);
             this.deleteVerticeBtn.Name = "deleteVerticeBtn";
-            this.deleteVerticeBtn.Size = new System.Drawing.Size(152, 53);
+            this.deleteVerticeBtn.Size = new System.Drawing.Size(133, 40);
             this.deleteVerticeBtn.TabIndex = 1;
             this.deleteVerticeBtn.Text = "Delete vertice";
             this.deleteVerticeBtn.UseVisualStyleBackColor = false;
@@ -148,10 +167,9 @@ namespace LightFiller
             this.addVerticeBtn.FlatAppearance.BorderSize = 5;
             this.addVerticeBtn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.addVerticeBtn.ForeColor = System.Drawing.SystemColors.Control;
-            this.addVerticeBtn.Location = new System.Drawing.Point(34, 200);
-            this.addVerticeBtn.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.addVerticeBtn.Location = new System.Drawing.Point(30, 150);
             this.addVerticeBtn.Name = "addVerticeBtn";
-            this.addVerticeBtn.Size = new System.Drawing.Size(152, 53);
+            this.addVerticeBtn.Size = new System.Drawing.Size(133, 40);
             this.addVerticeBtn.TabIndex = 2;
             this.addVerticeBtn.Text = "Add vertice";
             this.addVerticeBtn.UseVisualStyleBackColor = false;
@@ -161,9 +179,9 @@ namespace LightFiller
             // 
             this.PolygonLbl.AutoSize = true;
             this.PolygonLbl.Font = new System.Drawing.Font("Segoe UI", 10.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.PolygonLbl.Location = new System.Drawing.Point(70, 568);
+            this.PolygonLbl.Location = new System.Drawing.Point(61, 426);
             this.PolygonLbl.Name = "PolygonLbl";
-            this.PolygonLbl.Size = new System.Drawing.Size(85, 25);
+            this.PolygonLbl.Size = new System.Drawing.Size(68, 20);
             this.PolygonLbl.TabIndex = 3;
             this.PolygonLbl.Text = "Polygons";
             // 
@@ -172,23 +190,25 @@ namespace LightFiller
             this.polygonListBox.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeader1});
             this.polygonListBox.HideSelection = false;
-            this.polygonListBox.Location = new System.Drawing.Point(109, 596);
+            this.polygonListBox.Location = new System.Drawing.Point(95, 447);
+            this.polygonListBox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.polygonListBox.Name = "polygonListBox";
-            this.polygonListBox.Size = new System.Drawing.Size(151, 159);
+            this.polygonListBox.Size = new System.Drawing.Size(133, 120);
             this.polygonListBox.TabIndex = 2;
             this.polygonListBox.UseCompatibleStateImageBehavior = false;
             this.polygonListBox.SelectedIndexChanged += new System.EventHandler(this.polygonListBox_SelectedIndexChanged);
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ClientSize = new System.Drawing.Size(1615, 1076);
+            this.ClientSize = new System.Drawing.Size(1413, 796);
             this.Controls.Add(this.memoryPanel);
             this.Controls.Add(this.NewPolygonBtn);
             this.Controls.Add(this.pictureBox);
+            this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Form1";
@@ -213,6 +233,7 @@ namespace LightFiller
         private System.Windows.Forms.Button addVerticeBtn;
         private System.Windows.Forms.Button movePolygonBtn;
         private System.Windows.Forms.GroupBox polyActions;
+        private System.Windows.Forms.Button fillPolygonBtn;
     }
 }
 

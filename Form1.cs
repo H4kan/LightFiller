@@ -23,6 +23,8 @@ namespace LightFiller
 
         MemoryService MemoryService { get; set; }
 
+        FillingService FillingService { get; set; }
+
         public Form1()
         {
             InitializeComponent();
@@ -39,6 +41,7 @@ namespace LightFiller
                 this.pictureBox, 
                 this.LineService, 
                 this);
+            this.FillingService = new FillingService(this.LineService);
            
 
         }
@@ -244,6 +247,21 @@ namespace LightFiller
                 this.movePolygonBtn.FlatAppearance.BorderColor = Color.Red;
                 this.MemoryService.EnterMovePolygonMode();
             }
+        }
+
+        private void fillPolygonBtn_Click(object sender, EventArgs e)
+        {
+            this.FillingService.InitTables(this.MemoryService.SelectedPolygon);
+            
+            var colorDialog = new ColorDialog();
+            colorDialog.Color = Color.Red;
+
+            if (colorDialog.ShowDialog() == DialogResult.OK)
+            {
+                this.FillingService.RunFilling(colorDialog.Color);
+            }
+
+            this.pictureBox.Invalidate();
         }
     }
 

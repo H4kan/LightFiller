@@ -150,5 +150,15 @@ namespace LightFiller
         {
             BrensehamTrackingLine.EraseLine(line);
         }
+
+        public void FastHorizontalLine(int x1, int x2, int y, Color color)
+        {
+            int x = x1;
+            while (x <= x2)
+            {
+                Bmp.SetPixel(x, y, color);
+                x++;
+            }
+        }
     }
 }
