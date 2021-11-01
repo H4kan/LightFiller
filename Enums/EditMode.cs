@@ -11,6 +11,9 @@ namespace LightFiller.Enums
         MoveVertice,
         DeleteVertice,
         AddVertice,
-        MovePolygon
+        MovePolygon,
+        FillPolygon,
+        ColorVertice,
+        Animation
     }
 }

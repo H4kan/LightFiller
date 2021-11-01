@@ -7,9 +7,9 @@ namespace LightFiller
 {
     public class BresenhamLine
     {
-        public Bitmap bmp { get; set; }
+        public DirectBitmap bmp { get; set; }
 
-        public BresenhamLine(Bitmap bmp)
+        public BresenhamLine(DirectBitmap bmp)
         {
             this.bmp = bmp;
         }
@@ -30,7 +30,8 @@ namespace LightFiller
 
             while (x <= x2)
             {
-                bmp.SetPixel(x, y, color);
+                if (y >= 0 && y < bmp.Height && x >= 0 && x < bmp.Width)
+                    bmp.SetPixel(x, y, color);
                 if (d > 0)
                 {
                     y += y_step;
@@ -60,7 +61,8 @@ namespace LightFiller
 
             while (y <= y2)
             {
-                bmp.SetPixel(x, y, color);
+                if (y >= 0 && y < bmp.Height && x >= 0 && x < bmp.Width)
+                    bmp.SetPixel(x, y, color);
                 if (d > 0)
                 {
                     x += x_step;
@@ -70,6 +72,7 @@ namespace LightFiller
                 {
                     d += 2 * dx;
                 }
+                
                 y++;
             }
         }
@@ -77,25 +80,22 @@ namespace LightFiller
         public Line CreateLine(int x1, int y1, int x2, int y2)
         {
             var line = new Line();
-            if (x1 > 0 && x2 > 0 && y1 > 0 && y2 > 0 
-                && x1 < bmp.Width && x2 < bmp.Width
-                && y1 < bmp.Height && y2 < bmp.Height)
+            
+            if (Math.Abs(y2 - y1) < Math.Abs(x2 - x1))
             {
-                if (Math.Abs(y2 - y1) < Math.Abs(x2 - x1))
-                {
-                    if (x1 > x2)
-                        BresenhamLow(x2, y2, x1, y1, Color.Black);
-                    else
-                        BresenhamLow(x1, y1, x2, y2, Color.Black);
-                }
+                if (x1 > x2)
+                    BresenhamLow(x2, y2, x1, y1, Color.Black);
                 else
-                {
-                    if (y1 > y2)
-                        BresenhamHigh(x2, y2, x1, y1, Color.Black);
-                    else
-                        BresenhamHigh(x1, y1, x2, y2, Color.Black);
-                }
+                    BresenhamLow(x1, y1, x2, y2, Color.Black);
             }
+            else
+            {
+                if (y1 > y2)
+                    BresenhamHigh(x2, y2, x1, y1, Color.Black);
+                else
+                    BresenhamHigh(x1, y1, x2, y2, Color.Black);
+            }
+            
             line.AppendPoint(new Point(x1, y1));
             line.AppendPoint(new Point(x2, y2));
             return line;
@@ -103,30 +103,26 @@ namespace LightFiller
 
         public void EraseLine(Line line)
         {
-            if (line.Points.Count < 2) return;
             var x1 = line.Points[0].X;
             var x2 = line.Points[1].X;
             var y1 = line.Points[0].Y;
             var y2 = line.Points[1].Y;
-            if (x1 > 0 && x2 > 0 && y1 > 0 && y2 > 0
-              && x1 < bmp.Width && x2 < bmp.Width
-              && y1 < bmp.Height && y2 < bmp.Height)
+
+            if (Math.Abs(y2 - y1) < Math.Abs(x2 - x1))
             {
-                if (Math.Abs(y2 - y1) < Math.Abs(x2 - x1))
-                {
-                    if (x1 > x2)
-                        BresenhamLow(x2, y2, x1, y1, Color.White);
-                    else
-                        BresenhamLow(x1, y1, x2, y2, Color.White);
-                }
+                if (x1 > x2)
+                    BresenhamLow(x2, y2, x1, y1, Color.White);
                 else
-                {
-                    if (y1 > y2)
-                        BresenhamHigh(x2, y2, x1, y1, Color.White);
-                    else
-                        BresenhamHigh(x1, y1, x2, y2, Color.White);
-                }
+                    BresenhamLow(x1, y1, x2, y2, Color.White);
             }
+            else
+            {
+                if (y1 > y2)
+                    BresenhamHigh(x2, y2, x1, y1, Color.White);
+                else
+                    BresenhamHigh(x1, y1, x2, y2, Color.White);
+            }
+            
         }
     }
 }

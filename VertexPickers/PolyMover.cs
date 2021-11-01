@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
@@ -9,7 +10,10 @@ namespace LightFiller.VertexPickers
     public class PolyMover : VertexPicker
     {
         private MemoryService memoryService;
+        
         private Point lastLocation;
+        private bool isColorful;
+        private bool isSingleColor;
 
         public PolyMover(Point Origin, MemoryService memoryService, int index) : base(Origin, index)
         {
@@ -29,6 +33,15 @@ namespace LightFiller.VertexPickers
             {
                 this.memoryService.LineService.EraseLine(line);
             }
+
+            isColorful = this.memoryService.SelectedPolygon.Colors.Count > 0;
+            isSingleColor = !this.memoryService.SelectedPolygon.Colors.Any(c => c.Item2 != this.memoryService.SelectedPolygon.Colors[0].Item2);
+
+            if (isColorful)
+            {
+                var edgeTable = this.memoryService.FillingService.InitTables(this.memoryService.SelectedPolygon);
+                this.memoryService.FillingService.RunFilling(edgeTable, Color.White, false);
+            }
         }
 
         private void Tracking(object sender, MouseEventArgs e)
@@ -37,13 +50,19 @@ namespace LightFiller.VertexPickers
             var globalPictureBoxLocation = this.memoryService.LineService.PictureBox.PointToScreen(new Point(0, 0));
 
 
-            var newLocation = new Point(globalEventLocation.X - globalPictureBoxLocation.X - PickerSize.Width / 2,
-                globalEventLocation.Y - globalPictureBoxLocation.Y - PickerSize.Height / 2);
+            var newLocation = this.Location = new Point(
+                Math.Min(Math.Max(globalEventLocation.X - globalPictureBoxLocation.X - PickerSize.Width / 2, 0), this.memoryService.LineService.Bmp.Width - PickerSize.Width - 1),
+                Math.Min(Math.Max(globalEventLocation.Y - globalPictureBoxLocation.Y - PickerSize.Height / 2, 0), this.memoryService.LineService.Bmp.Height - PickerSize.Height - 1)); ;
 
 
             var offsetLocation = (newLocation.X - lastLocation.X, newLocation.Y - lastLocation.Y);
+            if (isColorful)
+            {
+                var edgeTable = this.memoryService.FillingService.InitTables(this.memoryService.SelectedPolygon);
+                this.memoryService.FillingService.RunFilling(edgeTable, Color.White, true);
+            }
 
-            for(int i = 0; i < this.memoryService.SelectedPolygon.Vertices.Count; i++)
+            for (int i = 0; i < this.memoryService.SelectedPolygon.Vertices.Count; i++)
             {
                 var oldPoint = this.memoryService.SelectedPolygon.Vertices[i];
 
@@ -70,6 +89,19 @@ namespace LightFiller.VertexPickers
                     oldPickerPoint.Y + offsetLocation.Item2);
             }
 
+            if (isColorful)
+            {
+                var edgeTable = this.memoryService.FillingService.InitTables(this.memoryService.SelectedPolygon);
+                if (isSingleColor)
+                {
+                    this.memoryService.FillingService.RunFilling(edgeTable, this.memoryService.SelectedPolygon.Colors[0].Item2, true);
+                }
+                else
+                {
+                    this.memoryService.FillingService.RunGradientFilling(edgeTable, this.memoryService.SelectedPolygon, true);
+                }
+            }
+
             this.memoryService.LineService.PictureBox.Invalidate();
 
             lastLocation = newLocation;
@@ -81,14 +113,26 @@ namespace LightFiller.VertexPickers
             this.MouseMove -= Tracking;
             this.MouseDown += BeginTracking;
 
-   
+            if (isColorful)
+            {
+                var edgeTable = this.memoryService.FillingService.InitTables(this.memoryService.SelectedPolygon);
+                if (isSingleColor)
+                {
+                    this.memoryService.FillingService.RunFilling(edgeTable, this.memoryService.SelectedPolygon.Colors[0].Item2, false);
+                }
+                else
+                {
+                    this.memoryService.FillingService.RunGradientFilling(edgeTable, this.memoryService.SelectedPolygon, false);
+                }
+            }
 
-            foreach(var line in this.memoryService.SelectedPolygon.Edges)
+            foreach (var line in this.memoryService.SelectedPolygon.Edges)
             {
                 this.memoryService.LineService.CreateLine(line);
             }
 
             this.memoryService.LineService.StopTrackingNoDrawing();
+
         }
     }
 }

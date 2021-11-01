@@ -8,9 +8,6 @@ namespace LightFiller
 {
     public class FillingService
     {
-        private List<EdgeHandler> EdgeTable = new List<EdgeHandler>();
-        private List<EdgeHandler> ActiveEdgeTable = new List<EdgeHandler>();
-
         private LineService lineService;
 
         public FillingService(LineService lineService)
@@ -18,68 +15,217 @@ namespace LightFiller
             this.lineService = lineService;
         }
 
-        public void InitTables(Polygon polygon)
+        public List<EdgeHandler> InitTables(Polygon polygon, Line[] extraEdges = null)
         {
-            EdgeTable.Clear();
-            ActiveEdgeTable.Clear();
-            foreach (var line in polygon.Edges)
+            var edgeTable = new List<EdgeHandler>();
+            edgeTable.Clear();
+            
+            foreach (var line in polygon.Edges.Where(e => e != null))
             {
-                EdgeTable.Add(new EdgeHandler(line));
+                edgeTable.Add(new EdgeHandler(line));
             }
-            EdgeTable = EdgeTable.OrderBy(e => e.yMin).ToList();
+            if (extraEdges != null)
+                foreach (var line in extraEdges)
+                {
+                    edgeTable.Add(new EdgeHandler(line));
+                }
+            edgeTable = edgeTable.OrderBy(e => e.yMin).ToList();
 
-
+            return edgeTable;
         }
 
-        public void RunFilling(Color color)
+        public void RunFilling(List<EdgeHandler> edgeTable, Color color, bool isTracking)
         {
+            var activeEdgeTable = new List<EdgeHandler>();
             int eInd = 0;
-            int y = EdgeTable[eInd].yMin;
-            while(eInd < EdgeTable.Count)
+            int y = edgeTable[eInd].yMin;
+            while(eInd < edgeTable.Count)
             {
-                if (y == EdgeTable[eInd].yMin)
+                if (y == edgeTable[eInd].yMin)
                 {
-                    while (eInd < EdgeTable.Count && y == EdgeTable[eInd].yMin)
+                    while (eInd < edgeTable.Count && y == edgeTable[eInd].yMin)
                     {
-                        ActiveEdgeTable.Add(EdgeTable[eInd]);
+                        activeEdgeTable.Add(edgeTable[eInd]);
                         eInd++;
                     }
-                    ActiveEdgeTable = ActiveEdgeTable.OrderBy(e => e.x).ThenBy(e => e.dX).ToList();
+                    
                 }
+                
+                activeEdgeTable = activeEdgeTable.FindAll(e => e.yMax > y);
+                activeEdgeTable = activeEdgeTable.OrderBy(e => e.x).ThenBy(e => e.dX).ToList();
 
-                ActiveEdgeTable = ActiveEdgeTable.FindAll(e => e.yMax > y);
-
-                for (int i = 0; i < ActiveEdgeTable.Count - 1; i += 2)
+                for (int i = 0; i < activeEdgeTable.Count - 1; i += 2)
                 {
-                    this.lineService.FastHorizontalLine(
-                        ActiveEdgeTable[i].x,
-                        ActiveEdgeTable[i + 1].x, y,
+                    if (isTracking)
+                        this.lineService.FastHorizontalTrackingLine(
+                        activeEdgeTable[i].x,
+                        activeEdgeTable[i + 1].x, y,
+                        color);
+                    else
+                        this.lineService.FastHorizontalLine(
+                        activeEdgeTable[i].x,
+                        activeEdgeTable[i + 1].x, y,
                         color);
                 }
 
-                
-
                 y++;
-                ActiveEdgeTable.ForEach(e => { e.x = e.basicX + (y - e.yMin) * e.dX / e.dY; });
+                activeEdgeTable.ForEach(e => { e.x = e.basicX + (y - e.yMin) * e.dX / e.dY; });
             
             }
-            while (ActiveEdgeTable.Count > 0)
+            while (activeEdgeTable.Count > 0)
             {
-                for (int i = 0; i < ActiveEdgeTable.Count - 1; i += 2)
+                for (int i = 0; i < activeEdgeTable.Count - 1; i += 2)
                 {
-                    this.lineService.FastHorizontalLine(
-                        ActiveEdgeTable[i].x,
-                        ActiveEdgeTable[i + 1].x, y,
+                    if (isTracking)
+                        this.lineService.FastHorizontalTrackingLine(
+                        activeEdgeTable[i].x,
+                        activeEdgeTable[i + 1].x, y,
+                        color);
+                    else
+                        this.lineService.FastHorizontalLine(
+                        activeEdgeTable[i].x,
+                        activeEdgeTable[i + 1].x, y,
                         color);
                 }
 
-                ActiveEdgeTable = ActiveEdgeTable.FindAll(e => e.yMax > y);
+                activeEdgeTable = activeEdgeTable.FindAll(e => e.yMax > y);
+                activeEdgeTable = activeEdgeTable.OrderBy(e => e.x).ThenBy(e => e.dX).ToList();
 
                 y++;
-                ActiveEdgeTable.ForEach(e => { e.x = e.basicX + (y - e.yMin) * e.dX / e.dY; });
+                activeEdgeTable.ForEach(e => { e.x = e.basicX + (y - e.yMin) * e.dX / e.dY; });
 
             }
 
         }
+
+        public void RunGradientFilling(List<EdgeHandler> edgeTable, Polygon polygon, bool isTracking)
+        {
+            int eInd = 0;
+            var activeEdgeTable = new List<EdgeHandler>();
+            int y = edgeTable[eInd].yMin;
+            while (eInd < edgeTable.Count)
+            {
+                if (y == edgeTable[eInd].yMin)
+                {
+                    while (eInd < edgeTable.Count && y == edgeTable[eInd].yMin)
+                    {
+                        activeEdgeTable.Add(edgeTable[eInd]);
+                        eInd++;
+                    }
+
+                }
+
+                activeEdgeTable = activeEdgeTable.FindAll(e => e.yMax > y);
+                activeEdgeTable = activeEdgeTable.OrderBy(e => e.x).ThenBy(e => e.dX).ToList();
+
+                for (int i = 0; i < activeEdgeTable.Count - 1; i += 2)
+                {
+                    if (isTracking)
+                        this.lineService.GradientHorizontalTrackingLine(
+                        activeEdgeTable[i].x,
+                        activeEdgeTable[i + 1].x, y,
+                        polygon);
+                    else
+                        this.lineService.GradientHorizontalLine(
+                        activeEdgeTable[i].x,
+                        activeEdgeTable[i + 1].x, y,
+                        polygon);
+                }
+
+                y++;
+                activeEdgeTable.ForEach(e => { e.x = e.basicX + (y - e.yMin) * e.dX / e.dY; });
+
+            }
+            while (activeEdgeTable.Count > 0)
+            {
+                for (int i = 0; i < activeEdgeTable.Count - 1; i += 2)
+                {
+                    if (isTracking)
+                        this.lineService.GradientHorizontalTrackingLine(
+                        activeEdgeTable[i].x,
+                        activeEdgeTable[i + 1].x, y,
+                        polygon);
+                    else
+                        this.lineService.GradientHorizontalLine(
+                        activeEdgeTable[i].x,
+                        activeEdgeTable[i + 1].x, y,
+                        polygon);
+                }
+
+                activeEdgeTable = activeEdgeTable.FindAll(e => e.yMax > y);
+                activeEdgeTable = activeEdgeTable.OrderBy(e => e.x).ThenBy(e => e.dX).ToList();
+
+                y++;
+                activeEdgeTable.ForEach(e => { e.x = e.basicX + (y - e.yMin) * e.dX / e.dY; });
+
+            }
+
+        }
+
+        //public void RunCopyGradientalFilling(List<EdgeHandler> edgeTable, Polygon polygon, (int, int) offsetLocation, bool isTracking)
+        //{
+        //    int eInd = 0;
+        //    var activeEdgeTable = new List<EdgeHandler>();
+        //    int y = edgeTable[eInd].yMin;
+        //    while (eInd < edgeTable.Count)
+        //    {
+        //        if (y == edgeTable[eInd].yMin)
+        //        {
+        //            while (eInd < edgeTable.Count && y == edgeTable[eInd].yMin)
+        //            {
+        //                activeEdgeTable.Add(edgeTable[eInd]);
+        //                eInd++;
+        //            }
+
+        //        }
+
+        //        activeEdgeTable = activeEdgeTable.FindAll(e => e.yMax > y);
+        //        activeEdgeTable = activeEdgeTable.OrderBy(e => e.x).ThenBy(e => e.dX).ToList();
+
+        //        for (int i = 0; i < activeEdgeTable.Count - 1; i += 2)
+        //        {
+        //            if (isTracking)
+        //                this.lineService.CopyTrackingLine(
+        //                activeEdgeTable[i].x,
+        //                activeEdgeTable[i + 1].x, y,
+        //                offsetLocation);
+        //            else
+        //                this.lineService.CopyLine(
+        //                activeEdgeTable[i].x,
+        //                activeEdgeTable[i + 1].x, y,
+        //                offsetLocation);
+        //        }
+
+        //        y++;
+        //        activeEdgeTable.ForEach(e => { e.x = e.basicX + (y - e.yMin) * e.dX / e.dY; });
+
+        //    }
+        //    while (activeEdgeTable.Count > 0)
+        //    {
+        //        for (int i = 0; i < activeEdgeTable.Count - 1; i += 2)
+        //        {
+        //            if (isTracking)
+        //                this.lineService.GradientHorizontalTrackingLine(
+        //                activeEdgeTable[i].x,
+        //                activeEdgeTable[i + 1].x, y,
+        //                polygon);
+        //            else
+        //                this.lineService.GradientHorizontalLine(
+        //                activeEdgeTable[i].x,
+        //                activeEdgeTable[i + 1].x, y,
+        //                polygon);
+        //        }
+
+        //        activeEdgeTable = activeEdgeTable.FindAll(e => e.yMax > y);
+        //        activeEdgeTable = activeEdgeTable.OrderBy(e => e.x).ThenBy(e => e.dX).ToList();
+
+        //        y++;
+        //        activeEdgeTable.ForEach(e => { e.x = e.basicX + (y - e.yMin) * e.dX / e.dY; });
+
+        //    }
+
+
+        //}
     }
+
 }

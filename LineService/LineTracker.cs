@@ -20,6 +20,7 @@ namespace LightFiller
             this.LineService = lineService;
             this.LastLine = new Line();
             this.LastLine.AppendPoint(Origin);
+            this.LastLine.AppendPoint(Origin);
         }
 
         public void Update(object sender, MouseEventArgs e)

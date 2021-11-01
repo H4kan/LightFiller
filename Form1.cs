@@ -13,7 +13,7 @@ namespace LightFiller
 {
     public partial class Form1 : Form
     {
-        Bitmap bmp;
+        DirectBitmap bmp;
 
         public EditMode Mode { get; set; }
 
@@ -25,6 +25,8 @@ namespace LightFiller
 
         FillingService FillingService { get; set; }
 
+        RandomService RandomService { get; set; }
+
         public Form1()
         {
             InitializeComponent();
@@ -34,23 +36,27 @@ namespace LightFiller
         {
             SetupScreen();
 
+            this.RandomService = new RandomService();
             this.LineService = new LineService(bmp, pictureBox);
+            this.FillingService = new FillingService(this.LineService);
             this.MemoryService = new MemoryService(
                 this.polyActions, 
                 this.polygonListBox,
                 this.pictureBox, 
                 this.LineService, 
+                this.FillingService,
+                this.RandomService,
                 this);
-            this.FillingService = new FillingService(this.LineService);
+            
            
 
         }
 
         private void SetupScreen()
         {
-            bmp = new Bitmap(pictureBox.Size.Width, pictureBox.Size.Height);
+            bmp = new DirectBitmap(pictureBox.Size.Width, pictureBox.Size.Height);
      
-            pictureBox.Image = bmp;
+            pictureBox.Image = bmp.Bitmap;
         }
 
         private void BeginPolygon(object sender, MouseEventArgs e)
@@ -214,6 +220,17 @@ namespace LightFiller
                     this.movePolygonBtn.FlatAppearance.BorderColor = Color.Black;
                     this.MemoryService.ExitVertexPickersMode();
                     break;
+                case EditMode.FillPolygon:
+                    this.fillPolygonBtn.FlatAppearance.BorderColor = Color.Black;
+                    break;
+                case EditMode.ColorVertice:
+                    this.colorVerticeBtn.FlatAppearance.BorderColor = Color.Black;
+                    this.MemoryService.ExitVertexPickersMode();
+                    break;
+                case EditMode.Animation:
+                    this.animationBtn.FlatAppearance.BorderColor = Color.Black;
+                    this.MemoryService.StopAnimation();
+                    break;
             }
             this.Mode = EditMode.Default;
         }
@@ -251,17 +268,48 @@ namespace LightFiller
 
         private void fillPolygonBtn_Click(object sender, EventArgs e)
         {
-            this.FillingService.InitTables(this.MemoryService.SelectedPolygon);
-            
-            var colorDialog = new ColorDialog();
-            colorDialog.Color = Color.Red;
-
-            if (colorDialog.ShowDialog() == DialogResult.OK)
+            if (this.Mode == EditMode.FillPolygon)
             {
-                this.FillingService.RunFilling(colorDialog.Color);
+                this.ExitAnyMode();
             }
+            else
+            {
+                this.ExitAnyMode();
+                this.Mode = EditMode.FillPolygon;
+                this.fillPolygonBtn.FlatAppearance.BorderColor = Color.Red;
+                this.MemoryService.EnterFillPolygonMode();
+                this.ExitAnyMode();
+            }
+        }
 
-            this.pictureBox.Invalidate();
+        private void colorVerticeBtn_Click(object sender, EventArgs e)
+        {
+            if (this.Mode == EditMode.ColorVertice)
+            {
+                this.ExitAnyMode();
+            }
+            else
+            {
+                this.ExitAnyMode();
+                this.Mode = EditMode.ColorVertice;
+                this.colorVerticeBtn.FlatAppearance.BorderColor = Color.Red;
+                this.MemoryService.EnterColorVerticeMode();
+            }
+        }
+
+        private void animationBtn_Click(object sender, EventArgs e)
+        {
+            if (this.Mode == EditMode.Animation)
+            {
+                this.ExitAnyMode();
+            }
+            else
+            {
+                this.ExitAnyMode();
+                this.Mode = EditMode.Animation;
+                this.animationBtn.FlatAppearance.BorderColor = Color.Red;
+                this.MemoryService.BeginAnimation();
+            }
         }
     }
 

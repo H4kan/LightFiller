@@ -8,9 +8,9 @@ namespace LightFiller
 {
     public class LineService
     {
-        public Bitmap Bmp { get; set; }
+        public DirectBitmap Bmp { get; set; }
 
-        public Bitmap TrackingBmp { get; set; }
+        public DirectBitmap TrackingBmp { get; set; }
 
         public BresenhamLine BrensehamLine { get; set; }
 
@@ -24,7 +24,7 @@ namespace LightFiller
 
         public bool IsLineTracking { get; set; }
 
-        public LineService(Bitmap bmp, PictureBox pictureBox)
+        public LineService(DirectBitmap bmp, PictureBox pictureBox)
         {
             this.Bmp = bmp;
             this.BrensehamLine = new BresenhamLine(bmp);
@@ -35,9 +35,9 @@ namespace LightFiller
         public void BeginTracking(int x, int y)
         {
             this.IsLineTracking = true;
-            TrackingBmp = (Bitmap)Bmp.Clone();
+            TrackingBmp = (DirectBitmap)Bmp.Clone();
             this.BrensehamTrackingLine = new BresenhamLine(TrackingBmp);
-            this.PictureBox.Image = TrackingBmp;
+            this.PictureBox.Image = TrackingBmp.Bitmap;
             this.PictureBox.Invalidate();
             LineTracker = new LineTracker(this, x, y);
             this.PictureBox.MouseMove += this.LineTracker.Update;
@@ -45,17 +45,17 @@ namespace LightFiller
 
         public void BeginTrackingNoUpdate()
         {
-            TrackingBmp = (Bitmap)Bmp.Clone();
+            TrackingBmp = (DirectBitmap)Bmp.Clone();
             this.BrensehamTrackingLine = new BresenhamLine(TrackingBmp);
-            this.PictureBox.Image = TrackingBmp;
+            this.PictureBox.Image = TrackingBmp.Bitmap;
             this.PictureBox.Invalidate();
         }
 
         public void BeginDoubleTracking(int x1, int y1, int x2, int y2)
         {
-            TrackingBmp = (Bitmap)Bmp.Clone();
+            TrackingBmp = (DirectBitmap)Bmp.Clone();
             this.BrensehamTrackingLine = new BresenhamLine(TrackingBmp);
-            this.PictureBox.Image = TrackingBmp;
+            this.PictureBox.Image = TrackingBmp.Bitmap;
             this.PictureBox.Invalidate();
             LineTracker = new LineTracker(this, x1, y1);
             DoubleTracker = new LineTracker(this, x2, y2);
@@ -67,7 +67,7 @@ namespace LightFiller
             var line = this.LineTracker.LastLine;
             this.CreateLine(line);
 
-            this.PictureBox.Image = Bmp;
+            this.PictureBox.Image = Bmp.Bitmap;
             this.TrackingBmp.Dispose();
             LineTracker = null;
 
@@ -78,7 +78,7 @@ namespace LightFiller
         {
             this.CreateLine(line);
 
-            this.PictureBox.Image = Bmp;
+            this.PictureBox.Image = Bmp.Bitmap;
             this.TrackingBmp.Dispose();
 
             this.PictureBox.Invalidate();
@@ -86,7 +86,7 @@ namespace LightFiller
 
         public void StopTrackingNoDrawing()
         {
-            this.PictureBox.Image = Bmp;
+            this.PictureBox.Image = Bmp.Bitmap;
             this.TrackingBmp.Dispose();
 
             this.PictureBox.Invalidate();
@@ -100,7 +100,7 @@ namespace LightFiller
             var dblLine = this.DoubleTracker.LastLine;
             this.CreateLine(dblLine);
 
-            this.PictureBox.Image = Bmp;
+            this.PictureBox.Image = Bmp.Bitmap;
             this.TrackingBmp.Dispose();
             LineTracker = null;
             DoubleTracker = null;
@@ -113,7 +113,7 @@ namespace LightFiller
         public void AbortTracking()
         {
 
-            this.PictureBox.Image = Bmp;
+            this.PictureBox.Image = Bmp.Bitmap;
             this.TrackingBmp.Dispose();
             LineTracker = null;
 
@@ -123,9 +123,11 @@ namespace LightFiller
 
         public Line CreateLine(int x1, int y1, int x2, int y2)
         {
-            return BrensehamLine.CreateLine(x1, y1, x2, y2);
-        }
+                return BrensehamLine.CreateLine(
+                x1, y1, x2, y2);
 
+            
+        }
         public Line CreateLine(Line line)
         {
             return this.CreateLine(line.Points[0].X, line.Points[0].Y, line.Points[1].X, line.Points[1].Y);
@@ -133,7 +135,10 @@ namespace LightFiller
 
         public Line CreateTrackingLine(int x1, int y1, int x2, int y2)
         {
+            
             return BrensehamTrackingLine.CreateLine(x1, y1, x2, y2);
+
+            
         }
         public Line CreateTrackingLine(Line line)
         {
@@ -153,12 +158,122 @@ namespace LightFiller
 
         public void FastHorizontalLine(int x1, int x2, int y, Color color)
         {
+            if (x1 >= Bmp.Width || x2 < 0 || y < 0 || y >= Bmp.Height) return;
+            if (x1 < 0) x1 = 0;
+            if (x2 >= Bmp.Width) x2 = Bmp.Width - 1;
             int x = x1;
             while (x <= x2)
             {
+                   
                 Bmp.SetPixel(x, y, color);
+                x++;
+            }   
+            
+        }
+
+        public void FastHorizontalTrackingLine(int x1, int x2, int y, Color color)
+        {
+
+            if (x1 >= Bmp.Width || x2 < 0 || y < 0 || y >= Bmp.Height) return;
+            if (x1 < 0) x1 = 0;
+            if (x2 >= Bmp.Width) x2 = Bmp.Width - 1;
+            int x = x1;
+            while (x <= x2)
+            {
+                TrackingBmp.SetPixel(x, y, color);
+                   
+                x++;
+            }
+            
+        }
+
+        public void GradientHorizontalLine(int x1, int x2, int y, Polygon polygon)
+        {
+            if (x1 >= Bmp.Width || x2 < 0 || y < 0 || y >= Bmp.Height) return;
+            if (x1 < 0) x1 = 0;
+            if (x2 >= Bmp.Width) x2 = Bmp.Width - 1;
+            int x = x1;
+            while (x <= x2)
+            {
+                Bmp.SetPixel(x, y, EvaluateGradient(polygon, x, y));
+
+                x++;
+            }   
+        }
+        
+
+        public void GradientHorizontalTrackingLine(int x1, int x2, int y, Polygon polygon)
+        {
+            if (x1 >= Bmp.Width || x2 < 0 || y < 0 || y >= Bmp.Height) return;
+            if (x1 < 0) x1 = 0;
+            if (x2 >= Bmp.Width) x2 = Bmp.Width - 1;
+            int x = x1;
+            while (x <= x2)
+            {
+                TrackingBmp.SetPixel(x, y, EvaluateGradient(polygon, x, y));
+
                 x++;
             }
         }
+        
+
+        public Color EvaluateGradient(Polygon polygon, int x, int y)
+        {
+            var numOfColors = polygon.Colors.Count;
+            double[] distances = new double[numOfColors];
+            double sum = 0;
+            for (int i = 0; i < numOfColors; i++)
+            {
+                distances[i] = 1 / (double)(Utils.CalculateDistance(polygon.Vertices[polygon.Colors[i].Item1], new Point(x, y)) + 1);
+                sum += distances[i];
+            }
+
+            double rColor = 0, gColor = 0, bColor = 0;
+
+            for (int i = 0; i < numOfColors; i++)
+            {
+                var ratio = distances[i] / sum;
+                rColor +=  ratio * polygon.Colors[i].Item2.R;
+                gColor += ratio * polygon.Colors[i].Item2.G;
+                bColor += ratio * polygon.Colors[i].Item2.B;
+
+            }
+
+            return Color.FromArgb(
+                Convert.ToInt32(Math.Round(rColor)),
+                Convert.ToInt32(Math.Round(gColor)),
+                Convert.ToInt32(Math.Round(bColor)));
+        }
+
+        //public void CopyLine(int x1, int x2, int y, (int, int) offsetLocation)
+        //{
+        //    if (x1 >= Bmp.Width || x2 < 0 || y < 0 || y >= Bmp.Height) return;
+        //    if (x1 < 0) x1 = 0;
+        //    if (x2 >= Bmp.Width) x2 = Bmp.Width - 1;
+        //    int x = x1;
+        //    while (x <= x2)
+        //    {
+        //        int oldIdx = (x - offsetLocation.Item1) + (y - offsetLocation.Item2) * Bmp.Width;
+        //        Bmp.Bits[x + y * Bmp.Width] = Bmp.Bits[oldIdx];
+        //        Bmp.Bits[oldIdx] = Color.White.ToArgb();
+        //        x++;
+        //    }
+        //}
+
+
+        //public void CopyTrackingLine(int x1, int x2, int y, (int, int) offsetLocation)
+        //{
+        //    if (x1 >= Bmp.Width || x2 < 0 || y < 0 || y >= Bmp.Height) return;
+        //    if (x1 < 0) x1 = 0;
+        //    if (x2 >= Bmp.Width) x2 = Bmp.Width - 1;
+        //    int x = x1;
+        //    while (x <= x2)
+        //    {
+        //        int oldIdx = (x - offsetLocation.Item1) + (y - offsetLocation.Item2) * Bmp.Width;
+        //        TrackingBmp.Bits[x + y * Bmp.Width] = TrackingBmp.Bits[oldIdx];
+        //        TrackingBmp.Bits[oldIdx] = Color.White.ToArgb();
+        //        x++;
+        //    }
+        //}
     }
 }

@@ -16,6 +16,9 @@
     <Compile Update="VertexPickers\PolyMover.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Update="VertexPickers\VertexColorer.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Update="VertexPickers\VertexPicker.cs">
       <SubType>Component</SubType>
     </Compile>

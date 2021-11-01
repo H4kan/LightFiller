@@ -10,12 +10,15 @@ namespace LightFiller
         public List<Line> Edges { get; set; }
 
         public List<Point> Vertices { get; set; }
+
+        public List<(int, Color)> Colors { get; set; }
         
         public Polygon(int x, int y)
         {
             Vertices = new List<Point>();
             Vertices.Add(new Point(x, y));
             Edges = new List<Line>();
+            Colors = new List<(int, Color)>();
         }
          
         public void AppendLine(Line line)
