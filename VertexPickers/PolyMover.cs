@@ -14,6 +14,8 @@ namespace LightFiller.VertexPickers
         private Point lastLocation;
         private bool isColorful;
         private bool isSingleColor;
+        private bool hasImage;
+        private bool isHeightedImage;
 
         public PolyMover(Point Origin, MemoryService memoryService, int index) : base(Origin, index)
         {
@@ -36,12 +38,14 @@ namespace LightFiller.VertexPickers
 
             isColorful = this.memoryService.SelectedPolygon.Colors.Count > 0;
             isSingleColor = !this.memoryService.SelectedPolygon.Colors.Any(c => c.Item2 != this.memoryService.SelectedPolygon.Colors[0].Item2);
+            hasImage = this.memoryService.SelectedPolygon.IsBitmapSet();
+            isHeightedImage = this.memoryService.SelectedPolygon.IsBitmapHeighted;
 
-            if (isColorful)
+            if (isColorful || hasImage)
             {
                 var edgeTable = this.memoryService.FillingService.InitTables(this.memoryService.SelectedPolygon);
-                this.memoryService.FillingService.RunFilling(edgeTable, Color.White, false);
-            }
+                this.memoryService.FillingService.RunFilling(edgeTable, Color.White, false, true);
+            } 
         }
 
         private void Tracking(object sender, MouseEventArgs e)
@@ -56,10 +60,10 @@ namespace LightFiller.VertexPickers
 
 
             var offsetLocation = (newLocation.X - lastLocation.X, newLocation.Y - lastLocation.Y);
-            if (isColorful)
+            if (hasImage || isColorful)
             {
                 var edgeTable = this.memoryService.FillingService.InitTables(this.memoryService.SelectedPolygon);
-                this.memoryService.FillingService.RunFilling(edgeTable, Color.White, true);
+                this.memoryService.FillingService.RunFilling(edgeTable, Color.White, true, true);
             }
 
             for (int i = 0; i < this.memoryService.SelectedPolygon.Vertices.Count; i++)
@@ -88,17 +92,30 @@ namespace LightFiller.VertexPickers
                 this.memoryService.VertexPickers[i].Location = new Point(oldPickerPoint.X + offsetLocation.Item1,
                     oldPickerPoint.Y + offsetLocation.Item2);
             }
-
-            if (isColorful)
+            if (hasImage || isColorful)
             {
                 var edgeTable = this.memoryService.FillingService.InitTables(this.memoryService.SelectedPolygon);
-                if (isSingleColor)
+                if (hasImage)
                 {
-                    this.memoryService.FillingService.RunFilling(edgeTable, this.memoryService.SelectedPolygon.Colors[0].Item2, true);
+                    if (isHeightedImage)
+                    {
+                        this.memoryService.FillingService.RunHeightImageFilling(edgeTable, this.memoryService.SelectedPolygon, false);
+                    }
+                    else
+                    {
+                        this.memoryService.FillingService.RunImageFilling(edgeTable, this.memoryService.SelectedPolygon, false);
+                    }
                 }
                 else
                 {
-                    this.memoryService.FillingService.RunGradientFilling(edgeTable, this.memoryService.SelectedPolygon, true);
+                    if (isSingleColor)
+                    {
+                        this.memoryService.FillingService.RunFilling(edgeTable, this.memoryService.SelectedPolygon.Colors[0].Item2, true);
+                    }
+                    else
+                    {
+                        this.memoryService.FillingService.RunGradientFilling(edgeTable, this.memoryService.SelectedPolygon, true);
+                    }
                 }
             }
 
@@ -113,17 +130,32 @@ namespace LightFiller.VertexPickers
             this.MouseMove -= Tracking;
             this.MouseDown += BeginTracking;
 
-            if (isColorful)
+            if (isColorful || hasImage)
             {
                 var edgeTable = this.memoryService.FillingService.InitTables(this.memoryService.SelectedPolygon);
-                if (isSingleColor)
+                if (hasImage)
                 {
-                    this.memoryService.FillingService.RunFilling(edgeTable, this.memoryService.SelectedPolygon.Colors[0].Item2, false);
+                    if (isHeightedImage)
+                    {
+                        this.memoryService.FillingService.RunHeightImageFilling(edgeTable, this.memoryService.SelectedPolygon, false);
+                    }
+                    else
+                    {
+                        this.memoryService.FillingService.RunImageFilling(edgeTable, this.memoryService.SelectedPolygon, false);
+                    }
                 }
                 else
                 {
-                    this.memoryService.FillingService.RunGradientFilling(edgeTable, this.memoryService.SelectedPolygon, false);
+                    if (isSingleColor)
+                    {
+                        this.memoryService.FillingService.RunFilling(edgeTable, this.memoryService.SelectedPolygon.Colors[0].Item2, false);
+                    }
+                    else
+                    {
+                        this.memoryService.FillingService.RunGradientFilling(edgeTable, this.memoryService.SelectedPolygon, false);
+                    }
                 }
+               
             }
 
             foreach (var line in this.memoryService.SelectedPolygon.Edges)
@@ -133,6 +165,7 @@ namespace LightFiller.VertexPickers
 
             this.memoryService.LineService.StopTrackingNoDrawing();
 
+            this.memoryService.CauseRedrawPolygons();
         }
     }
 }

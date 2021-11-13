@@ -15,17 +15,21 @@ namespace LightFiller
     {
         DirectBitmap bmp;
 
+        public DirectBitmap imageBmp;
+
         public EditMode Mode { get; set; }
 
         private Polygon CurrentPolygon { get; set; }
 
         LineService LineService { get; set; }
 
-        MemoryService MemoryService { get; set; }
+        public MemoryService MemoryService { get; set; }
 
         FillingService FillingService { get; set; }
 
         RandomService RandomService { get; set; }
+
+        LightService LightService { get; set; }
 
         public Form1()
         {
@@ -36,9 +40,19 @@ namespace LightFiller
         {
             SetupScreen();
 
+            var lightShower = new LightShower();
+            this.pictureBox.Controls.Add(lightShower);
+
             this.RandomService = new RandomService();
-            this.LineService = new LineService(bmp, pictureBox);
-            this.FillingService = new FillingService(this.LineService);
+
+            this.LightService = new LightService(lightShower);
+
+            this.LightService.InitLight(new Point(this.pictureBox.Width / 2, this.pictureBox.Height / 2));
+
+            this.LineService = new LineService(bmp, pictureBox, LightService, this);
+
+
+            this.FillingService = new FillingService(this.LineService, this);
             this.MemoryService = new MemoryService(
                 this.polyActions, 
                 this.polygonListBox,
@@ -47,8 +61,6 @@ namespace LightFiller
                 this.FillingService,
                 this.RandomService,
                 this);
-            
-           
 
         }
 
@@ -57,6 +69,24 @@ namespace LightFiller
             bmp = new DirectBitmap(pictureBox.Size.Width, pictureBox.Size.Height);
      
             pictureBox.Image = bmp.Bitmap;
+
+            this.k_sTrackBar.SetRange(0, 100);
+            this.k_sTrackBar.Value = 50;
+
+            this.k_dTrackBar.SetRange(0, 100);
+            this.k_dTrackBar.Value = 50;
+
+            this.mTrackBar.SetRange(0, 100);
+            this.mTrackBar.Value = 50;
+
+            this.lightHeightInput.Minimum = 1;
+            this.lightHeightInput.Maximum = 2000;
+            this.lightHeightInput.Value = 200;
+
+            this.lightHeightInput.ValueChanged += lightHeightInput_ValueChanged;
+
+            this.speedTrackBar.SetRange(0, 100);
+            this.speedTrackBar.Value = 50;
         }
 
         private void BeginPolygon(object sender, MouseEventArgs e)
@@ -138,6 +168,7 @@ namespace LightFiller
             else
             {
                 this.ExitAnyMode();
+                this.polygonListBox.SelectedItems.Clear();
                 this.MemoryService.ExitPolygonOptions();
                 this.NewPolygonBtn.FlatAppearance.BorderColor = Color.Red;
                 this.pictureBox.MouseClick += BeginPolygon;
@@ -229,7 +260,19 @@ namespace LightFiller
                     break;
                 case EditMode.Animation:
                     this.animationBtn.FlatAppearance.BorderColor = Color.Black;
+                    this.speedTrackBar.Visible = false;
+                    this.speedLabel.Visible = false;
                     this.MemoryService.StopAnimation();
+                    break;
+                case EditMode.LightMode:
+                    this.lightModeBtn.FlatAppearance.BorderColor = Color.Black;
+                    this.ExitLightning();
+                    break;
+                case EditMode.ImagePolygon:
+                    this.bitmapImageBtn.FlatAppearance.BorderColor = Color.Black;
+                    break;
+                case EditMode.HeightImage:
+                    this.heightImageBtn.FlatAppearance.BorderColor = Color.Black;
                     break;
             }
             this.Mode = EditMode.Default;
@@ -306,9 +349,138 @@ namespace LightFiller
             else
             {
                 this.ExitAnyMode();
+                this.polygonListBox.SelectedItems.Clear();
                 this.Mode = EditMode.Animation;
+                this.speedTrackBar.Visible = true;
+                this.speedLabel.Visible = true;
                 this.animationBtn.FlatAppearance.BorderColor = Color.Red;
                 this.MemoryService.BeginAnimation();
+            }
+        }
+
+        private void bitmapImageBtn_Click(object sender, EventArgs e)
+        {
+            if (this.Mode == EditMode.ImagePolygon)
+            {
+                this.ExitAnyMode();
+            }
+            else
+            {
+                this.ExitAnyMode();
+                this.Mode = EditMode.ImagePolygon;
+                this.bitmapImageBtn.FlatAppearance.BorderColor = Color.Red;
+                this.MemoryService.EnterImagePolygonMode();
+                this.ExitAnyMode();
+            }
+        }
+
+        private void lightModeBtn_Click(object sender, EventArgs e)
+        {
+            if (this.Mode == EditMode.LightMode)
+            {
+                this.ExitAnyMode();
+            }
+            else
+            {
+                this.ExitAnyMode();
+                this.polygonListBox.SelectedItems.Clear();
+                this.Mode = EditMode.LightMode;
+                this.lightModeBtn.FlatAppearance.BorderColor = Color.Red;
+                this.lightSettingsPanel.Visible = true;
+                
+            }
+        }
+
+        private void lightColorBtn_Click(object sender, EventArgs e)
+        {
+            var colorDialog = new ColorDialog();
+            colorDialog.Color = Color.White;
+
+            if (colorDialog.ShowDialog() == DialogResult.OK)
+            {
+                this.LightService.SetLight(colorDialog.Color);
+            }
+            this.MemoryService.CauseRedrawPolygons();
+        }
+
+        private void k_dTrackBar_Scroll(object sender, EventArgs e)
+        {
+            this.LightService.k_d = this.k_dTrackBar.Value / (double)100;
+            this.MemoryService.CauseRedrawPolygons();
+        }
+
+        private void k_sTrackBar_Scroll(object sender, EventArgs e)
+        {
+            this.LightService.k_s = this.k_sTrackBar.Value / (double)100;
+            this.MemoryService.CauseRedrawPolygons();
+        }
+
+        private void lightEnabledCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            this.FillingService.isLightningApplied = this.lightEnabledCheckBox.Checked;
+            this.lightHeightInput.Enabled = this.lightEnabledCheckBox.Checked;
+            this.k_dTrackBar.Enabled = this.lightEnabledCheckBox.Checked;
+            this.k_sTrackBar.Enabled = this.lightEnabledCheckBox.Checked;
+            this.mTrackBar.Enabled = this.lightEnabledCheckBox.Checked;
+            this.lightPositionBtn.Enabled = this.lightEnabledCheckBox.Checked;
+            this.lightColorBtn.Enabled = this.lightEnabledCheckBox.Checked;
+            this.LightService.LightShower.SetLocation(this.LightService.LightPosition);
+            this.LightService.LightShower.Visible = this.lightEnabledCheckBox.Checked;
+            this.MemoryService.CauseRedrawPolygons();
+        }
+
+        private void lightHeightInput_ValueChanged(object sender, EventArgs e)
+        {
+            this.LightService.LightHeight = Convert.ToInt32(this.lightHeightInput.Value);
+            this.MemoryService.CauseRedrawPolygons();
+        }
+
+        private void lightPositionBtn_Click(object sender, EventArgs e)
+        {
+            this.pictureBox.Cursor = Cursors.Hand;
+            this.pictureBox.MouseClick += setLightLocation;
+        }
+
+        private void setLightLocation(object sender, MouseEventArgs e)
+        {
+            this.pictureBox.MouseClick -= setLightLocation;
+            this.LightService.LightPosition = e.Location;
+            this.pictureBox.Cursor = Cursors.Default;
+            this.LightService.LightShower.SetLocation(this.LightService.LightPosition);
+            this.MemoryService.CauseRedrawPolygons();
+        }
+
+        private void ExitLightning()
+        {
+            this.lightSettingsPanel.Visible = false;
+            this.pictureBox.Cursor = Cursors.Default;
+            this.pictureBox.MouseClick -= setLightLocation;
+        }
+
+        private void mTrackBar_Scroll(object sender, EventArgs e)
+        {
+            this.LightService.m = this.mTrackBar.Value;
+            this.MemoryService.CauseRedrawPolygons();
+        }
+
+        private void speedTrackBar_Scroll(object sender, EventArgs e)
+        {
+            this.MemoryService.speedRatio = this.speedTrackBar.Value / (double)100;
+        }
+
+        private void heightImageBtn_Click(object sender, EventArgs e)
+        {
+            if (this.Mode == EditMode.HeightImage)
+            {
+                this.ExitAnyMode();
+            }
+            else
+            {
+                this.ExitAnyMode();
+                this.Mode = EditMode.HeightImage;
+                this.heightImageBtn.FlatAppearance.BorderColor = Color.Red;
+                this.MemoryService.EnterHeightImageMode();
+                this.ExitAnyMode();
             }
         }
     }

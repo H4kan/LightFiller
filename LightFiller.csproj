@@ -6,4 +6,8 @@
     <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Update="VertexPickers\LightShower.cs" />
+  </ItemGroup>
+
 </Project>

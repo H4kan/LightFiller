@@ -12,6 +12,10 @@ namespace LightFiller
         public List<Point> Vertices { get; set; }
 
         public List<(int, Color)> Colors { get; set; }
+
+        public DirectBitmap BitmapFilling { get; set; }
+
+        public bool IsBitmapHeighted { get; set; }
         
         public Polygon(int x, int y)
         {
@@ -49,6 +53,11 @@ namespace LightFiller
                 this.Edges[index].Points.Reverse();
 
             }
+        }
+
+        public bool IsBitmapSet()
+        {
+            return this.BitmapFilling != null && !this.BitmapFilling.Disposed;
         }
     }
 }

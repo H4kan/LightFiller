@@ -24,12 +24,18 @@ namespace LightFiller
 
         public bool IsLineTracking { get; set; }
 
-        public LineService(DirectBitmap bmp, PictureBox pictureBox)
+        private LightService lightService;
+
+        private Form1 form;
+
+        public LineService(DirectBitmap bmp, PictureBox pictureBox, LightService lightService, Form1 form)
         {
             this.Bmp = bmp;
             this.BrensehamLine = new BresenhamLine(bmp);
             
             this.PictureBox = pictureBox;
+            this.lightService = lightService;
+            this.form = form;
         }
 
         public void BeginTracking(int x, int y)
@@ -163,8 +169,7 @@ namespace LightFiller
             if (x2 >= Bmp.Width) x2 = Bmp.Width - 1;
             int x = x1;
             while (x <= x2)
-            {
-                   
+            {       
                 Bmp.SetPixel(x, y, color);
                 x++;
             }   
@@ -173,19 +178,46 @@ namespace LightFiller
 
         public void FastHorizontalTrackingLine(int x1, int x2, int y, Color color)
         {
-
             if (x1 >= Bmp.Width || x2 < 0 || y < 0 || y >= Bmp.Height) return;
             if (x1 < 0) x1 = 0;
             if (x2 >= Bmp.Width) x2 = Bmp.Width - 1;
             int x = x1;
             while (x <= x2)
             {
-                TrackingBmp.SetPixel(x, y, color);
-                   
+                TrackingBmp.SetPixel(x, y, color);    
                 x++;
             }
             
         }
+
+        public void FastHorizontalLightedLine(int x1, int x2, int y, Color color)
+        {
+            if (x1 >= Bmp.Width || x2 < 0 || y < 0 || y >= Bmp.Height) return;
+            if (x1 < 0) x1 = 0;
+            if (x2 >= Bmp.Width) x2 = Bmp.Width - 1;
+            int x = x1;
+            while (x <= x2)
+            {
+                Bmp.SetPixel(x, y, this.lightService.EvaluateLightedColor(color, new Point(x, y)));
+                x++;
+            }
+
+        }
+
+        public void FastHorizontalLightedTrackingLine(int x1, int x2, int y, Color color)
+        {
+            if (x1 >= Bmp.Width || x2 < 0 || y < 0 || y >= Bmp.Height) return;
+            if (x1 < 0) x1 = 0;
+            if (x2 >= Bmp.Width) x2 = Bmp.Width - 1;
+            int x = x1;
+            while (x <= x2)
+            {
+                TrackingBmp.SetPixel(x, y, this.lightService.EvaluateLightedColor(color, new Point(x, y)));
+                x++;
+            }
+
+        }
+
 
         public void GradientHorizontalLine(int x1, int x2, int y, Polygon polygon)
         {
@@ -215,7 +247,214 @@ namespace LightFiller
                 x++;
             }
         }
-        
+
+        public void GradientHorizontalLightedLine(int x1, int x2, int y, Polygon polygon)
+        {
+            if (x1 >= Bmp.Width || x2 < 0 || y < 0 || y >= Bmp.Height) return;
+            if (x1 < 0) x1 = 0;
+            if (x2 >= Bmp.Width) x2 = Bmp.Width - 1;
+            int x = x1;
+            while (x <= x2)
+            {
+                Bmp.SetPixel(x, y, this.lightService.EvaluateLightedColor(EvaluateGradient(polygon, x, y), new Point(x, y)));
+
+                x++;
+            }
+        }
+
+
+        public void GradientHorizontalLightedTrackingLine(int x1, int x2, int y, Polygon polygon)
+        {
+            if (x1 >= Bmp.Width || x2 < 0 || y < 0 || y >= Bmp.Height) return;
+            if (x1 < 0) x1 = 0;
+            if (x2 >= Bmp.Width) x2 = Bmp.Width - 1;
+            int x = x1;
+            while (x <= x2)
+            {
+                TrackingBmp.SetPixel(x, y, this.lightService.EvaluateLightedColor(EvaluateGradient(polygon, x, y), new Point(x, y)));
+
+                x++;
+            }
+        }
+
+        public void FastHorizontalImageLine(int x1, int x2, int y, int offsetX, int offsetY, Polygon polygon)
+        {
+            if (x1 >= Bmp.Width || x2 < 0 || y < 0 || y >= Bmp.Height) return;
+            if (x1 < 0) x1 = 0;
+            if (x2 >= Bmp.Width) x2 = Bmp.Width - 1;
+            int x = x1;
+            while (x <= x2)
+            {
+                Bmp.SetPixel(x, y, polygon.BitmapFilling.GetPixel((x - offsetX) % polygon.BitmapFilling.Width, 
+                    (y - offsetY) % polygon.BitmapFilling.Height));
+                x++;
+            }
+
+        }
+
+        public void FastHorizontalImageTrackingLine(int x1, int x2, int y, int offsetX, int offsetY, Polygon polygon)
+        {
+            if (x1 >= Bmp.Width || x2 < 0 || y < 0 || y >= Bmp.Height) return;
+            if (x1 < 0) x1 = 0;
+            if (x2 >= Bmp.Width) x2 = Bmp.Width - 1;
+            int x = x1;
+            while (x <= x2)
+            {
+                TrackingBmp.SetPixel(x, y, polygon.BitmapFilling.GetPixel((x - offsetX) % polygon.BitmapFilling.Width, 
+                    (y - offsetY) % polygon.BitmapFilling.Height));
+                x++;
+            }
+
+        }
+
+        public void FastHorizontalImageLightedLine(int x1, int x2, int y, int offsetX, int offsetY, Polygon polygon)
+        {
+            if (x1 >= Bmp.Width || x2 < 0 || y < 0 || y >= Bmp.Height) return;
+            if (x1 < 0) x1 = 0;
+            if (x2 >= Bmp.Width) x2 = Bmp.Width - 1;
+            int x = x1;
+            while (x <= x2)
+            {
+                Bmp.SetPixel(x, y,
+                    this.lightService.EvaluateLightedColor(polygon.BitmapFilling.GetPixel((x - offsetX) % polygon.BitmapFilling.Width,
+                            (y - offsetY) % polygon.BitmapFilling.Height),
+                        new Point(x, y))
+                    );
+                x++;
+            }
+        }
+
+        public void FastHorizontalImageLightedTrackingLine(int x1, int x2, int y, int offsetX, int offsetY, Polygon polygon)
+        {
+            if (x1 >= Bmp.Width || x2 < 0 || y < 0 || y >= Bmp.Height) return;
+            if (x1 < 0) x1 = 0;
+            if (x2 >= Bmp.Width) x2 = Bmp.Width - 1;
+            int x = x1;
+            while (x <= x2)
+            {
+                TrackingBmp.SetPixel(x, y, 
+                    this.lightService.EvaluateLightedColor(polygon.BitmapFilling.GetPixel((x - offsetX) % polygon.BitmapFilling.Width, 
+                            (y - offsetY) % polygon.BitmapFilling.Height), 
+                        new Point(x, y))
+                    );
+                x++;
+            }
+        }
+
+        public void FastHorizontalHeightedImageLine(int x1, int x2, int y, int offsetX, int offsetY, Polygon polygon)
+        {
+            if (x1 >= Bmp.Width || x2 < 0 || y < 0 || y >= Bmp.Height) return;
+            if (x1 < 0) x1 = 0;
+            if (x2 >= Bmp.Width) x2 = Bmp.Width - 1;
+            int x = x1;
+            while (x <= x2)
+            {
+                Bmp.SetPixel(x, y, polygon.BitmapFilling.GetPixel((x - offsetX) % polygon.BitmapFilling.Width,
+                    (y - offsetY) % polygon.BitmapFilling.Height));
+                x++;
+            }
+
+        }
+
+        public void FastHorizontalHeightedImageTrackingLine(int x1, int x2, int y, int offsetX, int offsetY, Polygon polygon)
+        {
+            if (x1 >= Bmp.Width || x2 < 0 || y < 0 || y >= Bmp.Height) return;
+            if (x1 < 0) x1 = 0;
+            if (x2 >= Bmp.Width) x2 = Bmp.Width - 1;
+            int x = x1;
+            while (x <= x2)
+            {
+                TrackingBmp.SetPixel(x, y, polygon.BitmapFilling.GetPixel((x - offsetX) % polygon.BitmapFilling.Width,
+                    (y - offsetY) % polygon.BitmapFilling.Height));
+                x++;
+            }
+
+        }
+
+        public void FastHorizontalHeightedImageLightedLine(int x1, int x2, int y, int offsetX, int offsetY, Polygon polygon)
+        {
+            if (x1 >= Bmp.Width || x2 < 0 || y < 0 || y >= Bmp.Height) return;
+            if (x1 < 0) x1 = 0;
+            if (x2 >= Bmp.Width) x2 = Bmp.Width - 1;
+            int x = x1;
+            
+            while (x <= x2)
+            {
+                var prevXPixel = polygon.BitmapFilling.GetPixel(
+                ((x - 1 - offsetX) % polygon.BitmapFilling.Width + polygon.BitmapFilling.Width) % polygon.BitmapFilling.Width,
+                            (y - offsetY) % polygon.BitmapFilling.Height);
+                var nextXPixel = polygon.BitmapFilling.GetPixel((x + 1 - offsetX) % polygon.BitmapFilling.Width,
+                                (y - offsetY) % polygon.BitmapFilling.Height);
+                var prevYPixel = polygon.BitmapFilling.GetPixel((x - offsetX) % polygon.BitmapFilling.Width,
+                                ((y - 1 - offsetY) % polygon.BitmapFilling.Height + polygon.BitmapFilling.Height) % polygon.BitmapFilling.Height);
+                var nextYPixel = polygon.BitmapFilling.GetPixel((x - offsetX) % polygon.BitmapFilling.Width,
+                                (y + 1 - offsetY) % polygon.BitmapFilling.Height);
+
+                var xNeighbours = new (int, int)[3] {
+                (prevXPixel.R, nextXPixel.R),
+                (prevXPixel.G, nextXPixel.G),
+                (prevXPixel.B, nextXPixel.B)
+                };
+
+                var yNeighbours = new (int, int)[3] {
+                (prevYPixel.R, nextYPixel.R),
+                (prevYPixel.G, nextYPixel.G),
+                (prevYPixel.B, nextYPixel.B)
+                };
+
+
+                Bmp.SetPixel(x, y,
+                    this.lightService.EvaluateHeightLightedColor(
+                        new Point(x, y),
+                        xNeighbours,
+                        yNeighbours
+                    ));
+                x++;
+            }
+        }
+
+        public void FastHorizontalHeightedImageLightedTrackingLine(int x1, int x2, int y, int offsetX, int offsetY, Polygon polygon)
+        {
+            if (x1 >= Bmp.Width || x2 < 0 || y < 0 || y >= Bmp.Height) return;
+            if (x1 < 0) x1 = 0;
+            if (x2 >= Bmp.Width) x2 = Bmp.Width - 1;
+            int x = x1;
+ 
+            while (x <= x2)
+            {
+                var prevXPixel = polygon.BitmapFilling.GetPixel(
+               ((x - 1 - offsetX) % polygon.BitmapFilling.Width + polygon.BitmapFilling.Width) % polygon.BitmapFilling.Width,
+                           (y - offsetY) % polygon.BitmapFilling.Height);
+                var nextXPixel = polygon.BitmapFilling.GetPixel((x + 1 - offsetX) % polygon.BitmapFilling.Width,
+                                (y - offsetY) % polygon.BitmapFilling.Height);
+                var prevYPixel = polygon.BitmapFilling.GetPixel((x - offsetX) % polygon.BitmapFilling.Width,
+                                ((y - 1 - offsetY) % polygon.BitmapFilling.Height + polygon.BitmapFilling.Height) % polygon.BitmapFilling.Height);
+                var nextYPixel = polygon.BitmapFilling.GetPixel((x - offsetX) % polygon.BitmapFilling.Width,
+                                (y + 1 - offsetY) % polygon.BitmapFilling.Height);
+
+                var xNeighbours = new (int, int)[3] {
+                (prevXPixel.R, nextXPixel.R),
+                (prevXPixel.G, nextXPixel.G),
+                (prevXPixel.B, nextXPixel.B)
+                };
+
+                var yNeighbours = new (int, int)[3] {
+                (prevYPixel.R, nextYPixel.R),
+                (prevYPixel.G, nextYPixel.G),
+                (prevYPixel.B, nextYPixel.B)
+                };
+
+
+                TrackingBmp.SetPixel(x, y,
+                    this.lightService.EvaluateHeightLightedColor(
+                        new Point(x, y),
+                        xNeighbours,
+                        yNeighbours
+                    ));
+                x++;
+            }
+        }
+
 
         public Color EvaluateGradient(Polygon polygon, int x, int y)
         {
@@ -244,36 +483,5 @@ namespace LightFiller
                 Convert.ToInt32(Math.Round(gColor)),
                 Convert.ToInt32(Math.Round(bColor)));
         }
-
-        //public void CopyLine(int x1, int x2, int y, (int, int) offsetLocation)
-        //{
-        //    if (x1 >= Bmp.Width || x2 < 0 || y < 0 || y >= Bmp.Height) return;
-        //    if (x1 < 0) x1 = 0;
-        //    if (x2 >= Bmp.Width) x2 = Bmp.Width - 1;
-        //    int x = x1;
-        //    while (x <= x2)
-        //    {
-        //        int oldIdx = (x - offsetLocation.Item1) + (y - offsetLocation.Item2) * Bmp.Width;
-        //        Bmp.Bits[x + y * Bmp.Width] = Bmp.Bits[oldIdx];
-        //        Bmp.Bits[oldIdx] = Color.White.ToArgb();
-        //        x++;
-        //    }
-        //}
-
-
-        //public void CopyTrackingLine(int x1, int x2, int y, (int, int) offsetLocation)
-        //{
-        //    if (x1 >= Bmp.Width || x2 < 0 || y < 0 || y >= Bmp.Height) return;
-        //    if (x1 < 0) x1 = 0;
-        //    if (x2 >= Bmp.Width) x2 = Bmp.Width - 1;
-        //    int x = x1;
-        //    while (x <= x2)
-        //    {
-        //        int oldIdx = (x - offsetLocation.Item1) + (y - offsetLocation.Item2) * Bmp.Width;
-        //        TrackingBmp.Bits[x + y * Bmp.Width] = TrackingBmp.Bits[oldIdx];
-        //        TrackingBmp.Bits[oldIdx] = Color.White.ToArgb();
-        //        x++;
-        //    }
-        //}
     }
 }

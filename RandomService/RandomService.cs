@@ -9,8 +9,8 @@ namespace LightFiller
     {
         /* CONSTANTS FOR RANDOM RANGING */
         
-        private const int minSpeed = -30;
-        private const int maxSpeed = 30;
+        private const int minSpeed = -60;
+        private const int maxSpeed = 60;
 
         /* randomness seeds, if set to negative, takes time dependent one */
         private int seed = -1;

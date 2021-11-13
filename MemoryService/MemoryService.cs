@@ -33,6 +33,10 @@ namespace LightFiller
 
         private bool shouldThreadGetCancelled { get; set; }
 
+        public List<(int, int)> speedVectors { get; set; }
+
+        public double speedRatio = 0.5;
+
         public MemoryService(
             GroupBox polygonActionsBox,
             ListView polygonListBox,
@@ -107,12 +111,7 @@ namespace LightFiller
 
             this.pictureBox.Controls.Remove(this.VertexPickers[index]);
             this.VertexPickers.RemoveAt(index);
-            if (this.VertexPickers.Count == 0)
-            {
-                this.Polygons.Remove(this.SelectedPolygon);
-                this.ExitPolygonOptions();
-                return;
-            }
+          
             int idx = 0;
             foreach (var vertexPicker in this.VertexPickers)
             {
@@ -131,7 +130,7 @@ namespace LightFiller
 
             var newLine = this.LineService.CreateLine(firstPoint.X, firstPoint.Y, secPoint.X, secPoint.Y);
 
-            bool isColorful = this.SelectedPolygon.Colors.Count > 0;
+ 
 
             this.SelectedPolygon.Colors = this.SelectedPolygon.Colors.FindAll(c => c.Item1 != index);
             for (int i = 0; i < this.SelectedPolygon.Colors.Count; i++)
@@ -141,22 +140,50 @@ namespace LightFiller
                         this.SelectedPolygon.Colors[i].Item2);
             }
 
+            bool isColorful = this.SelectedPolygon.Colors.Count > 0;
+            bool hasImage = !this.SelectedPolygon.IsBitmapSet();
+            bool isHeightedImage = this.SelectedPolygon.IsBitmapHeighted;
             bool isSingleColor = !this.SelectedPolygon.Colors.Any(c => c.Item2 != this.SelectedPolygon.Colors[0].Item2);
 
-            if (isColorful)
+            if (isColorful || hasImage)
             {
                 var edgeTable = this.FillingService.InitTables(this.SelectedPolygon);
-                this.FillingService.RunFilling(edgeTable, Color.White, false);
+                this.FillingService.RunFilling(edgeTable, Color.White, false, true);
             }
 
             this.SelectedPolygon.Edges[prevEdgeIdx] = newLine;
             this.SelectedPolygon.Edges.RemoveAt(index);
 
-            if (isColorful)
+          
+            if (this.VertexPickers.Count <= 2)
+            {
+                if (this.SelectedPolygon.IsBitmapSet())
+                    this.SelectedPolygon.BitmapFilling.Dispose();
+                this.Polygons.Remove(this.SelectedPolygon);
+                foreach (var line in this.SelectedPolygon.Edges)
+                    this.LineService.EraseLine(line);
+                this.ExitPolygonOptions();
+                this.CauseRedrawPolygons();
+                this.pictureBox.Invalidate();
+                return;
+            }
+
+            if (isColorful || hasImage)
             {
                 var edgeTable = this.FillingService.InitTables(this.SelectedPolygon);
 
-                if (isSingleColor && this.SelectedPolygon.Colors.Count > 0)
+                if (hasImage)
+                {
+                    if (isHeightedImage)
+                    {
+                        this.FillingService.RunHeightImageFilling(edgeTable, this.SelectedPolygon, false);
+                    }
+                    else
+                    {
+                        this.FillingService.RunImageFilling(edgeTable, this.SelectedPolygon, false);
+                    }
+                }
+                else if (isSingleColor && this.SelectedPolygon.Colors.Count > 0)
                 {
                     this.FillingService.RunFilling(edgeTable, this.SelectedPolygon.Colors[0].Item2, false);
                 }
@@ -175,6 +202,7 @@ namespace LightFiller
                 }
             }
 
+            this.CauseRedrawPolygons();
             this.pictureBox.Invalidate();
 
         }
@@ -190,10 +218,10 @@ namespace LightFiller
             var prevVertice = this.SelectedPolygon.Vertices[mover.Index == 0 ? this.SelectedPolygon.Vertices.Count - 1 : mover.Index - 1];
             var nextVertice = this.SelectedPolygon.Vertices[mover.Index == this.SelectedPolygon.Vertices.Count - 1 ? 0 : mover.Index + 1];
             this.LineService.BeginDoubleTracking(prevVertice.X, prevVertice.Y, nextVertice.X, nextVertice.Y);
-            if (this.SelectedPolygon.Colors.Count > 0)
+            if (this.SelectedPolygon.Colors.Count > 0 || this.SelectedPolygon.IsBitmapSet())
             {
                 var edgeTable = this.FillingService.InitTables(this.SelectedPolygon);
-                this.FillingService.RunFilling(edgeTable, Color.White, false);
+                this.FillingService.RunFilling(edgeTable, Color.White, false, true);
             }
             if (mover.Index == 0)
             {
@@ -287,6 +315,9 @@ namespace LightFiller
             {
                 this.FillingService.RunFilling(edgeTable, colorDialog.Color, false);
 
+                if (this.SelectedPolygon.IsBitmapSet())
+                    this.SelectedPolygon.BitmapFilling.Dispose();
+
                 this.SelectedPolygon.Colors.Clear();
                 for (int i = 0; i < this.SelectedPolygon.Vertices.Count; i++)
                 {
@@ -295,6 +326,61 @@ namespace LightFiller
 
             }
             else return;
+
+            foreach (var polygon in this.Polygons)
+            {
+                foreach (var line in polygon.Edges)
+                {
+                    this.LineService.CreateLine(line);
+                }
+            }
+
+            this.pictureBox.Invalidate();
+        }
+
+        public void EnterImagePolygonMode()
+        {
+            var edgeTable = this.FillingService.InitTables(this.SelectedPolygon);
+
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Title = "Browse Image Files",
+
+                CheckFileExists = true,
+                CheckPathExists = true,
+
+                DefaultExt = "png",
+                Filter = "png files (*.png)|*.png|jpg files (*.jpg)|*.jpg",
+                FilterIndex = 1,
+                RestoreDirectory = true,
+
+                ReadOnlyChecked = true,
+                ShowReadOnly = true
+            };
+
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                var image = Image.FromFile(openFileDialog.FileName);
+                var directBitmap = new DirectBitmap(image.Width, image.Height);
+                using (Graphics g = Graphics.FromImage(directBitmap.Bitmap))
+                {
+                    g.DrawImage(image, 0, 0, image.Width, image.Height);
+                }
+
+
+                if (this.SelectedPolygon.IsBitmapSet())
+                    this.SelectedPolygon.BitmapFilling.Dispose();
+
+                this.SelectedPolygon.IsBitmapHeighted = false;
+
+                this.form.imageBmp = directBitmap;
+                this.SelectedPolygon.BitmapFilling = this.form.imageBmp;
+
+                this.FillingService.RunImageFilling(edgeTable, this.SelectedPolygon, false);
+
+                this.SelectedPolygon.Colors.Clear();
+                
+            }
 
             foreach (var polygon in this.Polygons)
             {
@@ -332,6 +418,9 @@ namespace LightFiller
 
                 this.FillingService.RunGradientFilling(edgeTable, this.SelectedPolygon, false);
 
+                if (this.SelectedPolygon.IsBitmapSet())
+                    this.SelectedPolygon.BitmapFilling.Dispose();
+
             }
             else return;
 
@@ -350,10 +439,13 @@ namespace LightFiller
         {
             bool isColorful = polygon.Colors.Count > 0;
             bool isSingleColor = !polygon.Colors.Any(c => c.Item2 != polygon.Colors[0].Item2);
-            if (isColorful)
+            bool hasImage = polygon.IsBitmapSet();
+            bool isHeightedImage = polygon.IsBitmapHeighted;
+
+            if (isColorful || hasImage)
             {
                 var edgeTable = this.FillingService.InitTables(polygon);
-                this.FillingService.RunFilling(edgeTable, Color.White, true);
+                this.FillingService.RunFilling(edgeTable, Color.White, true, true);
             }
 
 
@@ -373,10 +465,21 @@ namespace LightFiller
                 currLine.Points[1] = new Point(currLine.Points[1].X + offsetLocation.Item1,
                     currLine.Points[1].Y + offsetLocation.Item2);
             }
-            if (isColorful)
+            if (isColorful || hasImage)
             {
                 var edgeTable = this.FillingService.InitTables(polygon);
-                if (isSingleColor)
+                if (hasImage)
+                {
+                    if (isHeightedImage)
+                    {
+                        this.FillingService.RunHeightImageFilling(edgeTable, polygon, true);
+                    }
+                    else
+                    {
+                        this.FillingService.RunImageFilling(edgeTable, polygon, true);
+                    }
+                }
+                else if (isSingleColor)
                 {
                     this.FillingService.RunFilling(edgeTable, polygon.Colors[0].Item2, true);
                 }
@@ -412,15 +515,30 @@ namespace LightFiller
 
         public void BeginAnimation()
         {
+        
             var invalidationWaiters = this.Polygons.Select(p => new ManualResetEvent(false)).ToList();
             var polygonWaiters = this.Polygons.Select(p => new ManualResetEvent(false)).ToList();
 
             this.shouldThreadGetCancelled = false;
 
-            var speedVectors = this.RandomService.GenerateRandomSpeedVectors(this.Polygons.Count);
+            this.speedVectors = this.RandomService.GenerateRandomSpeedVectors(this.Polygons.Count);
 
 
             this.LineService.BeginTrackingNoUpdate();
+
+            foreach (var polygon in this.Polygons)
+            {
+                if (polygon.Colors.Count > 0 || polygon.IsBitmapSet())
+                {
+                    var edgeTable = this.FillingService.InitTables(polygon);
+
+                    this.FillingService.RunFilling(edgeTable, Color.White, false, true);
+                }
+                foreach(var line in polygon.Edges)
+                {
+                    this.LineService.EraseLine(line);
+                }
+            }
 
             Task.Factory.StartNew(() =>
             {
@@ -431,7 +549,9 @@ namespace LightFiller
                     while (!shouldThreadGetCancelled)
                     {
                         stopWatch.Start();
-                        var direction = MovePolygon(polygon, speedVectors[i]);
+                        var direction = MovePolygon(polygon, 
+                            (Convert.ToInt32(Math.Round(speedVectors[i].Item1 * this.speedRatio)),
+                            Convert.ToInt32(Math.Round(speedVectors[i].Item2 * this.speedRatio))));
                         if (direction.Count > 0)
                         {
                             speedVectors[i] = this.RandomService.GenerateRandomSpeedVector(direction);
@@ -470,7 +590,144 @@ namespace LightFiller
 
         public void StopAnimation()
         {
+            foreach (var polygon in this.Polygons)
+            {
+                bool isColorful = polygon.Colors.Count > 0;
+                bool isSingleColor = !polygon.Colors.Any(c => c.Item2 != polygon.Colors[0].Item2);
+                bool hasImage = polygon.IsBitmapSet();
+                bool isHeightedImage = polygon.IsBitmapHeighted;
+
+                if (isColorful || hasImage)
+                {
+                    var edgeTable = this.FillingService.InitTables(polygon);
+                    if (hasImage)
+                    {
+                        if (isHeightedImage)
+                        {
+                            this.FillingService.RunHeightImageFilling(edgeTable, polygon, false);
+                        }
+                        else
+                        {
+                            this.FillingService.RunImageFilling(edgeTable, polygon, false);
+                        }
+                    }
+                    else if (isSingleColor)
+                    {
+                        this.FillingService.RunFilling(edgeTable, polygon.Colors[0].Item2, false);
+                    }
+                    else
+                    {
+                        this.FillingService.RunGradientFilling(edgeTable, polygon, false);
+                    }
+                }
+            }
+            foreach (var polygon in this.Polygons)
+            {
+                foreach (var line in polygon.Edges)
+                {
+                    this.LineService.CreateLine(line);
+                }
+            }
+            this.LineService.StopTrackingNoDrawing();
             this.shouldThreadGetCancelled = true;
+        }
+
+        public void CauseRedrawPolygons()
+        {
+            foreach (var polygon in this.Polygons)
+            {
+                bool isColorful = polygon.Colors.Count > 0;
+                bool isSingleColor = !polygon.Colors.Any(c => c.Item2 != polygon.Colors[0].Item2);
+                bool hasImage = polygon.IsBitmapSet();
+                bool isHeightedImage = polygon.IsBitmapHeighted;
+                
+                if (isColorful || hasImage)
+                {
+                    var edgeTable = this.FillingService.InitTables(polygon);
+                    if (hasImage)
+                    {
+                        if (isHeightedImage)
+                        {
+                            this.FillingService.RunHeightImageFilling(edgeTable, this.SelectedPolygon, false);
+                        }
+                        else
+                        {
+                            this.FillingService.RunImageFilling(edgeTable, this.SelectedPolygon, false);
+                        }
+                    }
+                    else if (isSingleColor)
+                    {
+                        this.FillingService.RunFilling(edgeTable, polygon.Colors[0].Item2, false);
+                    }
+                    else
+                    {
+                        this.FillingService.RunGradientFilling(edgeTable, polygon, false);
+                    }
+                }
+            }
+            foreach (var polygon in this.Polygons)
+            {
+                foreach (var line in polygon.Edges)
+                {
+                    this.LineService.CreateLine(line);
+                }
+            }
+            this.LineService.PictureBox.Invalidate();
+        }
+
+        public void EnterHeightImageMode()
+        {
+            var edgeTable = this.FillingService.InitTables(this.SelectedPolygon);
+
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Title = "Browse Image Files",
+
+                CheckFileExists = true,
+                CheckPathExists = true,
+
+                DefaultExt = "png",
+                Filter = "png files (*.png)|*.png|jpg files (*.jpg)|*.jpg",
+                FilterIndex = 1,
+                RestoreDirectory = true,
+
+                ReadOnlyChecked = true,
+                ShowReadOnly = true
+            };
+
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                var image = Image.FromFile(openFileDialog.FileName);
+                var directBitmap = new DirectBitmap(image.Width, image.Height);
+                using (Graphics g = Graphics.FromImage(directBitmap.Bitmap))
+                {
+                    g.DrawImage(image, 0, 0, image.Width, image.Height);
+                }
+
+
+                if (this.SelectedPolygon.IsBitmapSet())
+                    this.SelectedPolygon.BitmapFilling.Dispose();
+
+                this.SelectedPolygon.IsBitmapHeighted = true;
+
+                this.form.imageBmp = directBitmap;
+                this.SelectedPolygon.BitmapFilling = this.form.imageBmp;
+
+                this.FillingService.RunHeightImageFilling(edgeTable, this.SelectedPolygon, false);
+
+                this.SelectedPolygon.Colors.Clear();
+
+            }
+
+            foreach (var polygon in this.Polygons)
+            {
+                foreach (var line in polygon.Edges)
+                {
+                    this.LineService.CreateLine(line);
+                }
+            }
+
+            this.pictureBox.Invalidate();
         }
     }
 }

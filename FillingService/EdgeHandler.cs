@@ -8,6 +8,8 @@ namespace LightFiller
     {
         public int yMax { get; set; }
         public int yMin { get; set; }
+
+        public int xMin { get; set; }
         public int x { get; set; }
         
         public int dX { get; set; }
@@ -24,6 +26,7 @@ namespace LightFiller
             x = smallerY.X;
             basicX = x;
             yMax = greaterY.Y;
+            xMin = Math.Min(smallerY.X, greaterY.X);
             
             dX = (greaterY.X - smallerY.X);
             dY = (greaterY.Y - smallerY.Y);

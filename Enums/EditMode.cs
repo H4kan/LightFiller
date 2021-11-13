@@ -13,7 +13,10 @@ namespace LightFiller.Enums
         AddVertice,
         MovePolygon,
         FillPolygon,
+        ImagePolygon,
         ColorVertice,
-        Animation
+        Animation,
+        LightMode,
+        HeightImage
     }
 }
