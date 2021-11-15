@@ -99,11 +99,11 @@ namespace LightFiller.VertexPickers
                 {
                     if (isHeightedImage)
                     {
-                        this.memoryService.FillingService.RunHeightImageFilling(edgeTable, this.memoryService.SelectedPolygon, false);
+                        this.memoryService.FillingService.RunHeightImageFilling(edgeTable, this.memoryService.SelectedPolygon, true);
                     }
                     else
                     {
-                        this.memoryService.FillingService.RunImageFilling(edgeTable, this.memoryService.SelectedPolygon, false);
+                        this.memoryService.FillingService.RunImageFilling(edgeTable, this.memoryService.SelectedPolygon, true);
                     }
                 }
                 else

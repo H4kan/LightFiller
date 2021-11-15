@@ -1,0 +1,61 @@
+﻿
+-------------------------------------------------------------------
+Krótki opis obsługi aplikacji
+-------------------------------------------------------------------
+
+Aplikacja oparta jest o tryby działania.
+Podstawowe tryby to:
+
+- Add polygon
+- Polygon mode
+- Light mode
+- Animation
+
+W każdym z trybów możliwe jest wykonywanie konkretnych działań związanych z tym trybem i tylko ich,
+między trybami można przęłączać się w dowolnym momencie. Jeśli w trakcie przełączania w poprzednim
+trybie wykonywana była akcja, zostanie ona anulowana (np. zatrzymana zostanie animacja).
+
+Opis poszczególnych trybów:
+
+1. Add polygon
+
+W tryb Add polygon można wejść klikając przycisk "Add polygon".
+
+Będąc w trybie, klikając w kolejnych wybranych przez nas punktach LPM wybieramy kolejne wierzchołki 
+nowo tworzonego wielokąta, by zakończyć tworzenie wielokąta należy kliknąć PPM.
+Po zakończeniu tworzenia wielokąta automatycznie opuszczamy tryb Add polygon.
+
+2. Polygon mode
+
+W tryb Polygon mode można wejść wybierając wielokąt z listy wielokątów.
+Będąc w trybie, widoczne jest podmenu edycji, w którym możemy wybrać edycję, którą chcemy zaaplikować do
+wybranego wielokąta. Przyciski Color texture i Height texture pozwalają wybrać obrazek, którym wypełniony zostanie wielokąt,
+akceptowane formaty to JPG i PNG, dopóki nie zostanie włączone światło, te dwa tryby nie różnią się działaniem, po włączeniu
+światła, height texture, korzysta z kolorów pikseli jako ich wysokości, jeśli piksel ma jasność 255 to jest to rozumiane jako wysokość,
+na jakiej znajduje się światło, jeśli piksel ma jasność 0 to ma wysokość 0, pozostałe wartości są zeskalowane liniowo.
+
+3. Light mode
+
+W tryb Light mode można wejść klikając przycisk "Light mode".
+
+Będąc w trybie, widoczne jest podmenu światła, w którym możemy włączyć światło checkboxem Light enabled, a następnie ustawić jego
+k_s, k_d, m, wysokość, pozycję oraz kolor. W celu ustawienia pozycji należy kliknąć Choose position a następnie kliknąć na punkt
+na obrazku, w którym chcemy by zlokalizowane było światło.
+
+3. Animation
+
+W tryb Animation można wejść klikając przycisk "Animation".
+
+Będąc w trybie, wszystkie wielokąty na obrazie poruszają się w losowych kierunkach i odbijają się od krawędzi, zatrzymanie animacji
+możliwe jest poprzez wyjście z trybu, zarówno poprzez ponowne kliknięcie przycisku Animation jak i wybranie innego trybu.
+W trybie widoczny jest suwak Speed, który pozwala ustawić maksymalną wartość prędkości jaka może zostać wylosowana dla wielokąta.
+Prędkość wielokątów jest wyznaczona względem klatek a nie czasu, dlatego ta sama prędkość nie zawsze przekłada się na tą samą prędkość w
+rozumieniu fizycznym. Każdy z wielokątów przerysowywany jest w osobnym wątku, dodatkowo istnieje dodatkowy wątek czekający aż wszystkie
+wielokąty się przerysują w pamięci, i odświeżający obraz. Aplikacja jest skonfigurowana do działania w 20 fps, lecz jeśli jakiś wielokąt
+nie będzie w stanie przerysować się w 50 ms, to liczba klatek będzie odpowiednio mniejsza.
+
+
+-------------------------------------------------------------------------------------------------------------------
+
+LPM - lewy przycisk myszy
+PPM - prawy przycisk myszy

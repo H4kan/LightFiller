@@ -34,7 +34,7 @@ namespace LightFiller.VertexPickers
 
             isColorful = this.memoryService.SelectedPolygon.Colors.Count > 0;
             isSingleColor = !this.memoryService.SelectedPolygon.Colors.Any(c => c.Item2 != this.memoryService.SelectedPolygon.Colors[0].Item2);
-            hasImage = this.memoryService.SelectedPolygon.IsBitmapSet();
+            hasImage = this.memoryService.SelectedPolygon.IsBitmapSet() ;
             isHeightedImage = this.memoryService.SelectedPolygon.IsBitmapHeighted;
         }
 
@@ -78,11 +78,11 @@ namespace LightFiller.VertexPickers
                 {
                     if (isHeightedImage)
                     {
-                        this.fillingService.RunHeightImageFilling(edgeTable, this.memoryService.SelectedPolygon, false);
+                        this.fillingService.RunHeightImageFilling(edgeTable, this.memoryService.SelectedPolygon, true);
                     }
                     else
                     {
-                        this.fillingService.RunImageFilling(edgeTable, this.memoryService.SelectedPolygon, false);
+                        this.fillingService.RunImageFilling(edgeTable, this.memoryService.SelectedPolygon, true);
                     }
                 }
                 else if (isSingleColor)

@@ -141,7 +141,7 @@ namespace LightFiller
             }
 
             bool isColorful = this.SelectedPolygon.Colors.Count > 0;
-            bool hasImage = !this.SelectedPolygon.IsBitmapSet();
+            bool hasImage = this.SelectedPolygon.IsBitmapSet();
             bool isHeightedImage = this.SelectedPolygon.IsBitmapHeighted;
             bool isSingleColor = !this.SelectedPolygon.Colors.Any(c => c.Item2 != this.SelectedPolygon.Colors[0].Item2);
 
@@ -648,11 +648,11 @@ namespace LightFiller
                     {
                         if (isHeightedImage)
                         {
-                            this.FillingService.RunHeightImageFilling(edgeTable, this.SelectedPolygon, false);
+                            this.FillingService.RunHeightImageFilling(edgeTable, polygon, false);
                         }
                         else
                         {
-                            this.FillingService.RunImageFilling(edgeTable, this.SelectedPolygon, false);
+                            this.FillingService.RunImageFilling(edgeTable, polygon, false);
                         }
                     }
                     else if (isSingleColor)
